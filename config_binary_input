@@ -1,0 +1,11 @@
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: CHANGE_GPIO_NUMBER_HERE
+      mode: INPUT_PULLUP  # Abilita la resistenza interna; CHIUSO A GND = ON ; APERTO = OFF
+    name: "Button Input"
+    device_class: "opening"
+    on_press:
+      - logger.log: "Button pressed!"
+    on_release:
+      - logger.log: "Button released!"
