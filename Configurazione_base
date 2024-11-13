@@ -1,0 +1,24 @@
+esphome:
+  name: <CHANGE_MY_NAME>
+  friendly_name: <CHANGE_MY_NAME>
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "CHANGE_ME_AND_COPY_ME_IN_HOME_ASSISTANT"
+
+ota:
+  - platform: esphome
+    password: "7dedec7fa28519498f602712deaac901"
+
+wifi:
+  ssid: "M&A_IOT"
+  password: "m&a_iot19961995@"
