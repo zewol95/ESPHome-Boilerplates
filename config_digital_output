@@ -1,0 +1,13 @@
+# Configurazione dell'uscita GPIO per il relè che controllerà la caldaia
+output:
+  - platform: gpio
+    pin: GPIO21  # Scegli il pin GPIO al quale è connesso il relè
+    id: relay_caldaia
+
+# Configurazione switch per controllare l'uscita (relè) tramite Home Assistant o ESPHome
+switch:
+  - platform: output
+    name: "Caldaia"
+    output: relay_caldaia
+    id: switch_caldaia
+    inverted: false  # Il pin andrà alto con switch ON (livello logico alto o 3.3V), attivando il relè. Il pin andrà basso con switch OFF (GND)
