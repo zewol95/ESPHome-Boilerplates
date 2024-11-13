@@ -1,0 +1,11 @@
+sensor:
+  - platform: dht
+    pin: GPIO22  # Pin GPIO dove hai collegato il DATA del DHT11
+    model: DHT11  # Modello del sensore
+    temperature:
+      name: "Temperatura box caldaia"  # Nome del sensore di temperatura
+      id: temperatura_box_caldaia
+    humidity:
+      name: "Umidità box caldaia"  # Nome del sensore di umidità
+      id: umidita_box_caldaia
+    update_interval: 1s  # Intervallo di aggiornamento dei dati
