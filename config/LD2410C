@@ -2,8 +2,8 @@
 # Configurazione del sensore LD2410C (assumendo UART)
 
 uart:
-  tx_pin: GPIO18
-  rx_pin: GPIO19
+  tx_pin: GPIO17
+  rx_pin: GPIO16
   baud_rate: 256000
 
 ld2410:
