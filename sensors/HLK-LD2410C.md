@@ -10,9 +10,7 @@ Il sensore **HLK-LD2410C** è un radar a onde millimetriche ad alta precisione, 
 - Cavi di collegamento **(jumper wires)**
 
 ### Software
-- Arduino IDE / PlatformIO
-- Libreria **SoftwareSerial** (se necessaria)
-- Libreria **LD2410** per ESP32
+- EspHome
 
 ## Collegamenti
 | HLK-LD2410C | ESP32 |
