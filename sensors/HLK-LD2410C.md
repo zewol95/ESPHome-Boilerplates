@@ -1,30 +1,31 @@
-# HLK-LD2410C su ESP32
+# HLK-LD2410C on ESP32
 
-## Introduzione
-Il sensore **HLK-LD2410C** è un radar a onde millimetriche ad alta precisione, ideale per il rilevamento di presenza e movimento. Questo documento illustra il collegamento e la configurazione del sensore con un **ESP32**.
+## Introduction
+The **HLK-LD2410C** sensor is a high-precision millimeter-wave radar, ideal for presence and motion detection. This document explains how to connect and configure the sensor with an **ESP32**.
 
-## Requisiti
+## Requirements
 ### Hardware
 - **ESP32**
 - **HLK-LD2410C**
-- Cavi di collegamento **(jumper wires)**
+- Jumper wires
 
 ### Software
-- EspHome
+- ESPHome
 
-## Collegamenti
+## Connections
 | HLK-LD2410C | ESP32 |
 |-------------|-------|
-| VCC 5V | 5V |
-| GND | GND |
-| TX | GPIO16 (RX) |
-| RX | GPIO17 (TX) |
+| VCC 5V      | 5V    |
+| GND         | GND   |
+| TX          | GPIO16 (RX) |
+| RX          | GPIO17 (TX) |
 
-> **Nota:** Utilizzare un adattatore di livello logico se il modulo funziona a **3.3V**, in quanto il TX del sensore è a 3.3V mentre l'ESP32 supporta 3.3V sulle sue linee RX/TX.
+> **Note:** Use a level shifter adapter if the module operates at **3.3V**, as the sensor's TX is at 3.3V, while the ESP32 supports 3.3V on its RX/TX lines.
 
-## Configurazione dei Gate G0-G8 in ESPHome
-Il sensore HLK-LD2410C permette di configurare diversi gate di rilevamento (G0-G8) in ESPHome, che rappresentano zone di distanza progressiva dal sensore. Ogni gate fornisce dati sull'energia di movimento (move_energy) e sull'energia statica (still_energy).
-Questa configurazione consente di monitorare il movimento in diverse aree, migliorando la precisione e la sensibilità del rilevamento. I dati raccolti possono essere integrati in Home Assistant per applicazioni avanzate di automazione e sicurezza.
+## Configuring Gates G0-G8 in ESPHome
+The HLK-LD2410C sensor allows the configuration of multiple detection gates (G0-G8) in ESPHome, which represent progressive distance zones from the sensor. Each gate provides data on motion energy (move_energy) and static energy (still_energy).  
+This configuration enables monitoring of motion in different areas, enhancing the detection's precision and sensitivity. The collected data can be integrated into Home Assistant for advanced automation and security applications.
+
 
 
 ## Codice EspHome
