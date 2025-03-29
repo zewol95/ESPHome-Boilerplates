@@ -1,32 +1,33 @@
-# HLK-LD2450 su ESP32
+# HLK-LD2450 on ESP32
 
-## Introduzione
-Il sensore **HLK-LD2450** è un radar a onde millimetriche ad alta precisione, ideale per il rilevamento della presenza e del movimento. Rispetto al modello **LD2410C**, il **LD2450** offre un'area di rilevamento più ampia e una maggiore precisione nella determinazione della posizione degli oggetti. Questo documento illustra il collegamento e la configurazione del sensore con un **ESP32**.
+## Introduction
+The **HLK-LD2450** sensor is a high-precision millimeter-wave radar, ideal for presence and motion detection. Compared to the **LD2410C** model, the **LD2450** offers a wider detection area and greater accuracy in determining the position of objects. This document explains how to connect and configure the sensor with an **ESP32**.
 
-## Requisiti
+## Requirements
 ### Hardware
 - **ESP32**
 - **HLK-LD2450**
-- Cavi di collegamento **(jumper wires)**
+- Jumper wires
 
 ### Software
-- EspHome
+- ESPHome
 
-## Collegamenti
+## Connections
 | HLK-LD2450 | ESP32 |
 |-------------|-------|
-| VCC 5V | 5V |
-| GND | GND |
-| TX | GPIO16 (RX) |
-| RX | GPIO17 (TX) |
+| VCC 5V      | 5V    |
+| GND         | GND   |
+| TX          | GPIO16 (RX) |
+| RX          | GPIO17 (TX) |
 
-> **Nota:** Verificare il livello logico del TX del sensore per garantire la compatibilità con l'ESP32 (3.3V sulle linee RX/TX).
+> **Note:** Check the sensor's TX logic level to ensure compatibility with the ESP32 (3.3V on RX/TX lines).
 
-## Configurazione del Sensore in ESPHome
-Il sensore HLK-LD2450 permette il rilevamento preciso della distanza e della posizione degli oggetti in un'area definita. Questo permette di configurare zone di rilevamento multiple con sensibilità variabile, fornendo dati dettagliati su **energia di movimento** e **energia statica**.
-I dati raccolti possono essere utilizzati per migliorare automazioni in **Home Assistant** e altre piattaforme IoT.
+## Configuring the Sensor in ESPHome
+The HLK-LD2450 sensor allows precise distance and position detection of objects within a defined area. This enables the configuration of multiple detection zones with variable sensitivity, providing detailed data on **motion energy** and **static energy**.  
+The collected data can be used to enhance automations in **Home Assistant** and other IoT platforms.
 
-## Codice ESPHome
+
+## ESPHome Code
 ```cpp
 
 external_components:
@@ -173,19 +174,19 @@ LD2450:
 
 ```
 
-## Conclusione
-Il **HLK-LD2450** rappresenta un'evoluzione del modello **LD2410C**, offrendo maggiore precisione e funzionalità avanzate nel rilevamento della posizione degli oggetti. Grazie alla sua integrazione con **ESP32** e **ESPHome**, è una soluzione ideale per applicazioni di **rilevamento presenza, sicurezza e automazione domestica avanzata**.
+## Conclusion
+The **HLK-LD2450** is an evolution of the **LD2410C** model, offering greater precision and advanced features in detecting the position of objects. With its integration with **ESP32** and **ESPHome**, it is an ideal solution for **presence detection, security, and advanced home automation** applications.
 
-# Costruzione grafico dinamico in Home Assistant
+# Building a Dynamic Graph in Home Assistant
 
-## Requisiti
+## Requirements
 ### Software
 - **HACS**
 - **plotly-graph**
 
+## Plotly-graph Code
+Note: Be sure to rename the entities correctly.
 
-## Codice Plotly-graph
-Nota: Occorre rinominare le entità correttamente
 
 ```cpp
 
