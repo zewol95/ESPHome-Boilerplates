@@ -1,4 +1,4 @@
-# Basic I/O Configuration for ESPHome
+# Digital Input & Digital Output
 
 ## Overview
 This guide demonstrates how to set up basic **digital input** and **digital output** configurations using **ESPHome** on an ESP32 device. These configurations allow you to read the state of a button (digital input) and control a relay (digital output) through Home Assistant or ESPHome.
@@ -20,3 +20,26 @@ binary_sensor:
       - logger.log: "Button pressed!"
     on_release:
       - logger.log: "Button released!"
+```
+
+
+
+# Digital Output
+
+
+### Digital Output Code
+
+```yaml
+# GPIO output configuration for the relay controlling the boiler
+output:
+  - platform: gpio
+    pin: GPIO21  # Choose the GPIO pin to which the relay is connected
+    id: relay_boiler
+
+# Switch configuration to control the output (relay) via Home Assistant or ESPHome
+switch:
+  - platform: output
+    name: "Boiler"
+    output: relay_boiler
+    id: switch_boiler
+    inverted: false  # The pin will go high with switch ON (logic high or 3.3V), activating the relay. The pin will go low with switch OFF (GND).
