@@ -28,7 +28,7 @@ This configuration enables monitoring of motion in different areas, enhancing th
 
 
 
-## Codice EspHome
+## EspHome Code
 ```cpp
 
 uart:
