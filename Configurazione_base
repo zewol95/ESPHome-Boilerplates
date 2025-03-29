@@ -17,7 +17,7 @@ api:
 
 ota:
   - platform: esphome
-    password: "7dedec7fa28519498f602712deaac901"
+    password: "CHANGE_ME_AND_COPY_ME"
 
 wifi:
   ssid: "M&A_IOT"
