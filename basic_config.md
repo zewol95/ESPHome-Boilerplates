@@ -40,5 +40,5 @@ ota:
     password: "CHANGE_ME_AND_COPY_ME"
 
 wifi:
-  ssid: "<CHANGE_MY_NAME>"
-  password: "<CHANGE_MY_NAME>"
+  ssid: "<CHANGE_NAME>"
+  password: "<CHANGE_PASSWORD>"
