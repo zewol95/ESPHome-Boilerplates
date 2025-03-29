@@ -1,15 +1,10 @@
 
-# Configurazione del sensore LD2410C (assumendo UART)
-
 uart:
   tx_pin: GPIO17
   rx_pin: GPIO16
   baud_rate: 256000
 
 ld2410:
-
-
-
 
 binary_sensor:
   - platform: ld2410
@@ -21,7 +16,6 @@ binary_sensor:
       name: Still Target
     out_pin_presence_status:
       name: out pin presence status
-
 
 sensor:
   - platform: ld2410
@@ -91,7 +85,6 @@ switch:
     bluetooth:
       name: "control bluetooth"
 
-
 number:
   - platform: ld2410
     timeout:
@@ -148,7 +141,6 @@ number:
       still_threshold:
         name: g8 still threshold
 
-
 button:
   - platform: ld2410
     factory_reset:
@@ -158,14 +150,12 @@ button:
     query_params:
       name: query params
 
-
 text_sensor:
   - platform: ld2410
     version:
       name: "firmware version"
     mac_address:
       name: "mac address"
-
 
 select:
   - platform: ld2410
