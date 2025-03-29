@@ -23,4 +23,5 @@ For ready-to-use sensor configurations, check out the various templates availabl
 
 | **Link** | **Description** |
 |----------|-----------------|
+| [Basic Configurations](https://github.com/zewol95/ESPHome-Boilerplates/blob/main/basic_config.md) | Basic configuration. |
 | [Sensor Configurations](https://github.com/zewol95/ESPHome-Boilerplates/tree/main/sensors) | A collection of pre-configured sensor templates for ESPHome. |
