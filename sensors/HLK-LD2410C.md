@@ -1,4 +1,4 @@
-# Collegamento del Sensore HLK-LD2410C su ESP32
+# HLK-LD2410C su ESP32
 
 ## Introduzione
 Il sensore **HLK-LD2410C** è un radar a onde millimetriche ad alta precisione, ideale per il rilevamento di presenza e movimento. Questo documento illustra il collegamento e la configurazione del sensore con un **ESP32**.
