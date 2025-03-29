@@ -1,4 +1,4 @@
-# Collegamento del Sensore HLK-LD2450 su ESP32
+# HLK-LD2450 su ESP32
 
 ## Introduzione
 Il sensore **HLK-LD2450** è un radar a onde millimetriche ad alta precisione, ideale per il rilevamento della presenza e del movimento. Rispetto al modello **LD2410C**, il **LD2450** offre un'area di rilevamento più ampia e una maggiore precisione nella determinazione della posizione degli oggetti. Questo documento illustra il collegamento e la configurazione del sensore con un **ESP32**.
