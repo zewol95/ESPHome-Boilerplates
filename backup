@@ -1,0 +1,1579 @@
+```
+esphome:
+  name: elecrow5-panel
+  friendly_name: elecrow5_panel
+  on_boot:
+    priority: -100
+    then:
+      - delay: 2s
+      - component.update: touch0
+
+  platformio_options:
+    board_build.esp-idf.memory_type: qio_opi
+    board_build.flash_mode: dio
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+  level: DEBUG
+
+api:
+  encryption:
+    key: "p+uTNTbCngSnHfnX7y/YBT+kh94KK90sUqXAEmJEzRM="
+  on_client_connected:
+    - if:
+        condition:
+          lambda: 'return (0 == client_info.find("Home Assistant "));'
+        then:
+          - lvgl.widget.show: lbl_hastatus
+  on_client_disconnected:
+    - if:
+        condition:
+          lambda: 'return (0 == client_info.find("Home Assistant "));'
+        then:
+          - lvgl.widget.hide: lbl_hastatus
+
+ota:
+  - platform: esphome
+    password: "72c92a26be5f3896c3b52cbada48f901"
+
+wifi:
+  ssid: "M&A_IOT"
+  password: "m&a_iot19961995@"
+  ap:
+    ssid: "Display-1 Fallback Hotspot"
+    password: "n3nQ5jfdR53I"
+
+captive_portal:
+
+i2c:
+  sda: 19
+  scl: 20
+  scan: true
+
+display:
+  - platform: rpi_dpi_rgb
+    id: main_display
+    color_order: RGB
+    invert_colors: True
+    auto_clear_enabled: false
+    dimensions:
+      width: 800
+      height: 480
+    de_pin: 40
+    hsync_pin: 39
+    vsync_pin: 41
+    pclk_pin: 0
+    pclk_frequency: 18MHz #   24mhz
+    data_pins:
+      red:
+        - 45        #r1
+        - 48        #r2
+        - 47        #r3
+        - 21        #r4
+        - 14        #r5
+      green:
+        - 5         #g0
+        - 6         #g1
+        - 7         #g2
+        - 15        #g3
+        - 16        #g4
+        - 4         #g5
+      blue:
+        - 8         #b1
+        - 3         #b2
+        - 46        #b3
+        - 9         #b4
+        - 1         #b5
+
+touchscreen:
+  platform: gt911
+  id: touch0
+  display: main_display
+  update_interval: 20ms
+  on_release:
+    then:
+      - if:                 
+          condition: lvgl.is_paused
+          then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+            - switch.turn_off: switch_antiburn
+            - lvgl.page.show: page_home_1
+            - light.turn_on: display_backlight
+            
+output:
+  - platform: ledc   # Backlight
+    pin: 2
+    id: backlight_pin
+
+  - platform: gpio   # Buzzer
+    pin: GPIO38
+    id: buzzer_output
+
+switch:
+  - platform: output   # Buzzer
+    name: "Buzzer GPIO38"
+    output: buzzer_output
+    id: buzzer_switch
+    icon: mdi:volume-high
+
+  - platform: template  # Anti burner
+    name: Antiburn
+    id: switch_antiburn
+    icon: mdi:television-shimmer
+    optimistic: true
+    entity_category: "config"
+    turn_on_action:
+      - logger.log: "Starting Antiburn"
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+      - lvgl.pause:
+          show_snow: true
+    turn_off_action:
+      - logger.log: "Stopping Antiburn"
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+
+interval:
+  - interval: 500ms   # buzzer
+    then:
+      - if:
+          condition:
+            switch.is_on: buzzer_switch
+          then:
+            - output.turn_on: buzzer_output
+            - delay: 250ms
+            - output.turn_off: buzzer_output
+
+key_collector:    # Configuro il keypad della sicurezza
+  - source_id: lvgl_keypad
+    min_length: 0
+    max_length: 4
+    end_keys: "#"
+    end_key_required: true
+    back_keys: "*"
+    allowed_keys: "0123456789*#"
+    timeout: 5s
+    on_progress:
+      - if:
+          condition:
+            lambda: return (0 != x.compare(std::string{""}));
+          then:
+            - lvgl.label.update:
+                id: lvgl_label
+                text: !lambda 'return x.c_str();'
+          else:
+            - lvgl.label.update:
+                id: lvgl_label
+                text: "Enter code and \uF00C"
+    on_result:
+      - if:
+          condition:
+            lambda: return (0 == x.compare(std::string{"1234"}));
+          then:
+            - lvgl.led.update:
+                id: lvgl_led
+                color: 0x00FF00
+            - lvgl.page.show: page_sicurezza_1
+            - lvgl.led.update:
+                id: lvgl_led
+                color: 0xFF0000
+          else:
+            - lvgl.led.update:
+                id: lvgl_led
+                color: 0xFF0000
+
+lvgl:  
+  color_depth: 16
+  bg_color: 0
+  border_width: 0
+  outline_width: 0
+  shadow_width: 0
+  text_font: unscii_16
+  align: center
+
+  on_idle:   # Backlight
+    timeout: !lambda "return (id(display_timeout).state * 1000);"
+    then:
+      - logger.log: "LVGL is idle"
+      - light.turn_off: display_backlight
+      - lvgl.pause:
+
+
+  theme:
+    label:
+      text_font: montserrat_34 # set all your labels to use your custom defined font
+    button:
+      bg_color: 0x2F8CD8
+      bg_grad_color: 0x005782
+      bg_grad_dir: VER
+      bg_opa: COVER
+      border_color: 0x0077b3
+      border_width: 1
+      text_color: 0xFFFFFF
+      pressed: # set some button colors to be different in pressed state
+        bg_color: 0x006699
+        bg_grad_color: 0x00334d
+      checked: # set some button colors to be different in checked state
+        bg_color: 0x1d5f96
+        bg_grad_color: 0x03324A
+        text_color: 0xfff300
+    buttonmatrix:
+      bg_opa: TRANSP
+      border_color: 0x0077b3
+      border_width: 0
+      text_color: 0xFFFFFF
+      pad_all: 0
+      items: # set all your buttonmatrix buttons to use your custom defined styles and font
+        bg_color: 0x2F8CD8
+        bg_grad_color: 0x005782
+        bg_grad_dir: VER
+        bg_opa: COVER
+        border_color: 0x0077b3
+        border_width: 1
+        text_color: 0xFFFFFF
+        text_font: montserrat_18
+        pressed:
+          bg_color: 0x006699
+          bg_grad_color: 0x00334d
+        checked:
+          bg_color: 0x1d5f96
+          bg_grad_color: 0x03324A
+          text_color: 0x005580
+  style_definitions:
+    - id: header_footer
+      bg_color: 0x2F8CD8
+      bg_grad_color: 0x005782
+      bg_grad_dir: VER
+      bg_opa: COVER
+      border_opa: TRANSP
+      radius: 0
+      pad_all: 0
+      pad_row: 0
+      pad_column: 0
+      border_color: 0x0077b3
+      text_color: 0xFFFFFF
+      text_font: montserrat_28
+      width: 100%
+      height: 30
+  top_layer:
+    widgets:
+      - buttonmatrix:
+            align: bottom_mid
+            styles: header_footer
+            pad_all: 0
+            outline_width: 0
+            id: top_layer
+            items:
+              styles: header_footer
+            rows:
+              - buttons:
+                - id: btn_page_home_1
+                  text: "HOME"
+                  on_press:
+                    then:
+                      lvgl.page.show: page_home_1
+      - label:
+          text: "\uF1EB"
+          id: lbl_hastatus
+          hidden: true
+          align: top_right
+          x: -2
+          y: 3
+          text_align: right
+          text_color: 0xFFFFFF
+          text_font: montserrat_24 
+
+
+
+
+
+
+  pages:
+
+    - id: page_home_1
+      widgets:
+        - obj:
+            align: TOP_MID
+            styles: header_footer
+            widgets:
+              - label:
+                  text: "M&A"
+                  text_font: montserrat_28
+                  align: CENTER
+                  text_align: CENTER
+                  text_color: 0xFFFFFF
+        - obj:
+            align: CENTER
+            width: 100%
+            height: 420px
+            pad_all: 6
+            text_align: CENTER
+            layout: # enable the GRID layout for the children widgets
+              type: GRID # split the rows and the columns proportionally
+              grid_columns: [FR(1), FR(1), FR(1)] # equal
+              grid_rows: [FR(50), FR(50)] # like percents
+            widgets:
+              - button:
+                  id: a1
+                  align: CENTER
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH 
+                  widgets:
+                    - image:
+                        src: transmissiontower
+                        pad_all: 2
+                    - label:
+                        text: "ENERGIA"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                    then:
+                      lvgl.page.show: page_energia_1
+              - button:
+                  id: a2
+                  align: CENTER
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH 
+                  widgets:
+                    - image:
+                        src: toggleswitchoutline
+                        pad_all: 2
+                    - label:
+                        text: "COMANDI"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                    then:
+                      lvgl.page.show: page_comandi_1
+              - button:
+                  id: a3
+                  align: CENTER
+                  grid_cell_column_pos: 1 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH 
+                  widgets:
+                    - image:
+                        src: shieldaccount
+                        pad_all: 2
+                    - label:
+                        text: "SICUREZZA"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                    then:
+                      lvgl.page.show: keypad_page
+              - button:
+                  id: a4
+                  align: CENTER
+                  grid_cell_column_pos: 1 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH 
+                  widgets:
+                    - image:
+                        src: lan
+                        pad_all: 2
+                    - label:
+                        text: "RETE"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                    then:
+                      lvgl.page.show: page_test_1
+              - button:
+                  id: a5
+                  align: CENTER
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH 
+                  widgets:
+                    - image:
+                        src: thermometerlines
+                        pad_all: 2
+                    - label:
+                        text: "TERMOSTATO"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                    then:
+                      lvgl.page.show: page_termostato
+              - button:
+                  id: a6
+                  align: CENTER
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH 
+                  widgets:
+                    - image:
+                        src: information
+                        pad_all: 2
+                    - label:
+                        text: "INFO"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                    then:
+                      lvgl.page.show: page_test_1
+
+    - id: page_energia_1
+      widgets:
+        - obj:
+            align: TOP_MID
+            styles: header_footer
+            widgets:
+              - label:
+                  text: "ENERGIA"
+                  text_font: montserrat_28
+                  align: CENTER
+                  text_align: CENTER
+                  text_color: 0xFFFFFF
+        - obj:
+            align: CENTER
+            width: 100%
+            height: 420px
+            pad_all: 18
+            text_align: CENTER
+            layout: # enable the GRID layout for the children widgets
+              type: GRID # split the rows and the columns proportionally
+              grid_columns: [FR(1), FR(2)] # equal
+              grid_rows: [FR(10), FR(20), FR(10), FR(20), FR(10), FR(20)] # like percents
+            widgets:
+            ###############
+              - label:
+                  text: "Potenza"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+              - label:
+                  id: page_energia_1_potenza
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+            ###############
+              - label:
+                  text: "Tensione"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 2 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+              - label:
+                  id: page_energia_1_tensione
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 3 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+            ###############
+              - label:
+                  text: "UPS Sentinel"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 4 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+              - label:
+                  id: page_energia_1_upssentinel_battery
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 5 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+            ###############
+
+    - id: keypad_page
+      styles: header_footer
+      widgets:
+        - led:
+            id: lvgl_led
+            x: 30
+            y: 47
+            color: 0xFF0000
+            brightness: 100%
+        - obj:
+            width: 500
+            height: 25
+            align_to:
+              id: lvgl_led
+              align: OUT_RIGHT_MID
+              x: 17
+            border_width: 1
+            border_color: 0
+            border_opa: 50%
+            pad_all: 0
+            bg_color: 0xFFFFFF      # Colore di sfondo bianco
+            bg_opa: 100%            # Opacità massima (pieno)
+            shadow_width: 0         # Nessuna ombra
+            shadow_spread: 0        # Nessuna diffusione
+            shadow_opa: 0%          # Invisibile (per sicurezza)
+            radius: 5
+            widgets:
+              - label:
+                  id: lvgl_label
+                  align: CENTER
+                  text: "Enter code and \uF00C"
+                  text_align: CENTER
+        - buttonmatrix:
+            id: lvgl_keypad
+            styles: header_footer
+            x: 20
+            y: 85
+            width: 500
+            height: 350
+            items:
+              pressed:
+                bg_color: 0xFFFF00
+            rows:
+              - buttons:
+                  - text: 1
+                    control:
+                      no_repeat: true
+                  - text: 2
+                    control:
+                      no_repeat: true
+                  - text: 3
+                    control:
+                      no_repeat: true
+              - buttons:
+                  - text: 4
+                    control:
+                      no_repeat: true
+                  - text: 5
+                    control:
+                      no_repeat: true
+                  - text: 6
+                    control:
+                      no_repeat: true
+              - buttons:
+                  - text: 7
+                    control:
+                      no_repeat: true
+                  - text: 8
+                    control:
+                      no_repeat: true
+                  - text: 9
+                    control:
+                      no_repeat: true
+              - buttons:
+                  - text: "\uF55A"
+                    key_code: "*"
+                    control:
+                      no_repeat: true
+                  - text: 0
+                    control:
+                      no_repeat: true
+                  - text: "\uF00C"
+                    key_code: "#"
+                    control:
+                      no_repeat: true
+
+    - id: page_sicurezza_1
+      widgets:
+        - obj:
+            align: TOP_MID
+            styles: header_footer
+            widgets:
+              - label:
+                  text: "SICUREZZA"
+                  text_font: montserrat_28
+                  align: CENTER
+                  text_align: CENTER
+                  text_color: 0xFFFFFF
+        - obj:
+            align: CENTER
+            width: 100%
+            height: 420px
+            pad_all: 18
+            text_align: CENTER
+            layout: # enable the GRID layout for the children widgets
+              type: GRID # split the rows and the columns proportionally
+              grid_columns: [FR(1), FR(1), FR(1)] # equal
+              grid_rows: [FR(30), FR(30), FR(30), FR(10)] # like percents
+            widgets:
+              - button:
+                  id: buttonallarmeperimetrale
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_column_span: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH 
+                  bg_color: 0xFF0000
+                  checked:
+                    bg_color: 0x44d704
+                  widgets:
+                    - label:
+                        text: "Sensori Magnetici"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                  - homeassistant.action:
+                      action: automation.toggle
+                      data:
+                        entity_id: automation.allarme_perimetrale
+              - button:
+                  id: buttonallsentinelleinterne
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0xFF0000
+                  checked:
+                    bg_color: 0x44d704
+                  widgets:
+                    - label:
+                        text: "Sentinelle\ninterne"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                  - homeassistant.action:
+                      action: automation.toggle
+                      data:
+                        entity_id: automation.allarme_notifica_sentinelle_interne              
+              - button:
+                  id: buttonallsentinelleesterne
+                  grid_cell_column_pos: 1 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0xFF0000
+                  checked:
+                    bg_color: 0x44d704
+                  widgets:
+                    - label:
+                        text: "Sentinella\nesterna"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                  - homeassistant.action:
+                      action: automation.toggle
+                      data:
+                        entity_id: automation.allarme_videosorveglianza_notifica_perimetro_interno_occupancy
+
+              - button:
+                  id: buttonallbuzzer
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 2 # the corresponding cell
+                  grid_cell_column_span: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0x6fa8dc
+                  checked:
+                    bg_color: 0x2986cc
+                  widgets:
+                    - label:
+                        text: "Silenzia Allarme"
+                        text_font: montserrat_28
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                  - homeassistant.action:
+                      action: script.toggle
+                      data:
+                        entity_id: script.allarme_disattivo_buzzer
+
+
+
+              ##### Mini griglia 2x2 nella posizione colonna 1 riga 0
+              - obj:
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  border_width: 0
+                  bg_opa: TRANSP
+                  widgets:
+                    - obj:
+                        align: CENTER
+                        width: 100%
+                        height: 100%
+                        pad_all: 4
+                        border_width: 0
+                        bg_opa: TRANSP
+                        text_align: CENTER
+                        layout: # enable the GRID layout for the children widgets
+                          type: GRID # split the rows and the columns proportionally
+                          grid_columns: [FR(2), FR(2)] # equal
+                          grid_rows: [FR(50), FR(50)] # like percents
+                        widgets:  
+                          - button:
+                              id: sensoreportasala
+                              grid_cell_column_pos: 0
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 1
+                              grid_cell_x_align: STRETCH
+                              grid_cell_y_align: STRETCH
+                              clickable: false
+                              bg_color: 0x8fce00
+                              checked:
+                                bg_color: 0xFF0000
+                              widgets:
+                              - label:
+                                  text: "PORTA"
+                                  align: CENTER
+                                  text_color: 0xFFFFFF
+                                  text_font: montserrat_14
+                          - button:
+                              id: sensorefinestrasala
+                              grid_cell_column_pos: 0
+                              grid_cell_row_pos: 1
+                              grid_cell_row_span: 1
+                              grid_cell_x_align: STRETCH
+                              grid_cell_y_align: STRETCH
+                              clickable: false
+                              bg_color: 0x8fce00
+                              checked:
+                                bg_color: 0xFF0000
+                              widgets:
+                              - label:
+                                  text: "FIN.SALA"
+                                  align: CENTER
+                                  text_color: 0xFFFFFF
+                                  text_font: montserrat_14
+                          - button:
+                              id: sensorefinestracamera
+                              grid_cell_column_pos: 1
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 1
+                              grid_cell_x_align: STRETCH
+                              grid_cell_y_align: STRETCH
+                              clickable: false
+                              bg_color: 0x8fce00
+                              checked:
+                                bg_color: 0xFF0000
+                              widgets:
+                              - label:
+                                  text: "FIN.CAMERA"
+                                  align: CENTER
+                                  text_color: 0xFFFFFF
+                                  text_font: montserrat_14
+                          - button:
+                              id: sensorefinestrabagno
+                              grid_cell_column_pos: 1
+                              grid_cell_row_pos: 1
+                              grid_cell_row_span: 1
+                              grid_cell_x_align: STRETCH
+                              grid_cell_y_align: STRETCH
+                              clickable: false
+                              bg_color: 0x8fce00
+                              checked:
+                                bg_color: 0xFF0000
+                              widgets:
+                              - label:
+                                  text: "FIN.BAGNO"
+                                  align: CENTER
+                                  text_color: 0xFFFFFF
+                                  text_font: montserrat_14
+              ##### Mini griglia 2x2 nella posizione colonna 1 riga 2
+              - obj:
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  border_width: 0
+                  bg_opa: TRANSP
+                  widgets:
+                    - obj:
+                        align: CENTER
+                        width: 100%
+                        height: 100%
+                        pad_all: 4
+                        border_width: 0
+                        bg_opa: TRANSP
+                        text_align: CENTER
+                        layout: # enable the GRID layout for the children widgets
+                          type: GRID # split the rows and the columns proportionally
+                          grid_columns: [FR(2), FR(2)] # equal
+                          grid_rows: [FR(50), FR(50)] # like percents
+                        widgets:  
+                          - button:
+                              id: sentinellainternastato
+                              grid_cell_column_pos: 0
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 1
+                              grid_cell_x_align: STRETCH
+                              grid_cell_y_align: STRETCH
+                              clickable: false
+                              bg_color: 0x8fce00
+                              checked:
+                                bg_color: 0xFF0000
+                              widgets:
+                              - label:
+                                  text: "STATO"
+                                  align: CENTER
+                                  text_color: 0xFFFFFF
+                                  text_font: montserrat_14
+                          - button:
+                              id: sentinellasalainternaconnessione
+                              grid_cell_column_pos: 1
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 1
+                              grid_cell_x_align: STRETCH
+                              grid_cell_y_align: STRETCH
+                              clickable: false
+                              bg_color: 0x8fce00
+                              checked:
+                                bg_color: 0xFF0000
+                              widgets:
+                              - label:
+                                  text: "RETE"
+                                  align: CENTER
+                                  text_color: 0xFFFFFF
+                                  text_font: montserrat_14                         
+
+              ##### Mini griglia 2x2 nella posizione colonna 1 riga 3
+              - obj:
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 2 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  border_width: 0
+                  bg_opa: TRANSP
+                  widgets:
+                    - obj:
+                        align: CENTER
+                        width: 100%
+                        height: 100%
+                        pad_all: 4
+                        border_width: 0
+                        bg_opa: TRANSP
+                        text_align: CENTER
+                        layout: # enable the GRID layout for the children widgets
+                          type: GRID # split the rows and the columns proportionally
+                          grid_columns: [FR(2), FR(2)] # equal
+                          grid_rows: [FR(50), FR(50)] # like percents
+                        widgets:  
+                          - button:
+                              id: sentinellaesternastato
+                              grid_cell_column_pos: 0
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 1
+                              grid_cell_x_align: STRETCH
+                              grid_cell_y_align: STRETCH
+                              clickable: false
+                              bg_color: 0x8fce00
+                              checked:
+                                bg_color: 0xFF0000
+                              widgets:
+                              - label:
+                                  text: "STATO"
+                                  align: CENTER
+                                  text_color: 0xFFFFFF
+                                  text_font: montserrat_14
+                          - button:
+                              id: sentinellaesternaconnessione
+                              grid_cell_column_pos: 1
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 1
+                              grid_cell_x_align: STRETCH
+                              grid_cell_y_align: STRETCH
+                              clickable: false
+                              bg_color: 0x8fce00
+                              checked:
+                                bg_color: 0xFF0000
+                              widgets:
+                              - label:
+                                  text: "RETE"
+                                  align: CENTER
+                                  text_color: 0xFFFFFF
+                                  text_font: montserrat_14                         
+
+    - id: page_termostato
+      widgets:
+        - obj:
+            align: TOP_MID
+            styles: header_footer
+            widgets:
+              - label:
+                  text: "TERMOSTATO"
+                  text_font: montserrat_28
+                  align: CENTER
+                  text_align: CENTER
+                  text_color: 0xFFFFFF
+        - obj:
+            align: CENTER
+            width: 100%
+            height: 420px
+            pad_all: 18
+            text_align: CENTER
+            layout: # enable the GRID layout for the children widgets
+              type: GRID # split the rows and the columns proportionally
+              grid_columns: [FR(1), FR(1)] # equal
+              grid_rows: [FR(30), FR(30), FR(30), FR(10)] # like percents
+            widgets:
+              - label:
+                  id: page_termostato_valore_attuale
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_column_span: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+              - label:
+                  id: page_termostato_temperatura_casa
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_column_span: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+              - button:
+                  id: page_termostato_decrementa05
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 2 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  widgets:
+                    - label:
+                        text: "-"
+                        text_font: montserrat_42
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                  - homeassistant.action:
+                      action: automation.trigger
+                      data:
+                        entity_id: automation.caldaia_decrementa_0_5
+              - button:
+                  id: page_termostato_incrementa05
+                  grid_cell_column_pos: 1 # place the widget in
+                  grid_cell_row_pos: 2 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  widgets:
+                    - label:
+                        text: "+"
+                        text_font: montserrat_42
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                  - homeassistant.action:
+                      action: automation.trigger
+                      data:
+                        entity_id: automation.caldaia_incrementa_0_5
+
+              - button:
+                  id: page_termostato_stato_caldaia
+                  grid_cell_column_pos: 0
+                  grid_cell_row_pos: 3
+                  grid_cell_column_span: 2
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  clickable: false
+                  bg_color: 0x999999
+                  checked:
+                    bg_color: 0x8fce00
+                  widgets:
+                  - label:
+                      text: "STATO CALDAIA"
+                      align: CENTER
+                      text_color: 0xFFFFFF
+                      text_font: montserrat_20
+
+
+    - id: page_comandi_1
+      widgets:
+        - obj:
+            align: TOP_MID
+            styles: header_footer
+            widgets:
+              - label:
+                  text: "COMANDI"
+                  text_font: montserrat_28
+                  align: CENTER
+                  text_align: CENTER
+                  text_color: 0xFFFFFF
+        - obj:
+            align: CENTER
+            width: 100%
+            height: 420px
+            pad_all: 18
+            text_align: CENTER
+            layout: # enable the GRID layout for the children widgets
+              type: GRID # split the rows and the columns proportionally
+              grid_columns: [FR(1), FR(1), FR(1)] # equal
+              grid_rows: [FR(30), FR(30), FR(30), FR(10)] # like percents
+            widgets:
+              - button:
+                  id: page_comandi_1_deumidificatore
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0xbababa
+                  checked:
+                    bg_color: 0x44d704
+                  widgets:
+                    - label:
+                        text: "DEUMIDIFICATORE"
+                        text_font: montserrat_22
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                  - homeassistant.action:
+                      action: switch.toggle
+                      data:
+                        entity_id: switch.deumidificatore_interruttore            
+              - button:
+                  id: page_comandi_1_lavatrice
+                  grid_cell_column_pos: 1 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_row_span: 1
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  bg_color: 0xbababa
+                  checked:
+                    bg_color: 0x44d704
+                  widgets:
+                    - label:
+                        text: "LAVATRICE"
+                        text_font: montserrat_22
+                        align: CENTER
+                        text_align: CENTER
+                        text_color: 0xFFFFFF
+                  on_press:
+                  - homeassistant.action:
+                      action: switch.toggle
+                      data:
+                        entity_id: switch.presa_lavatrice_interruttore 
+
+
+
+    - id: page_test_1
+      widgets:
+        - obj:
+            align: TOP_MID
+            styles: header_footer
+            widgets:
+              - label:
+                  text: "TEST PAGINA 1"
+                  text_font: montserrat_28
+                  align: CENTER
+                  text_align: CENTER
+                  text_color: 0xFFFFFF
+        - obj:
+            align: CENTER
+            width: 100%
+            height: 420px
+            pad_all: 18
+            text_align: CENTER
+            layout: # enable the GRID layout for the children widgets
+              type: GRID # split the rows and the columns proportionally
+              grid_columns: [FR(1), FR(1), FR(1)] # equal
+              grid_rows: [FR(10), FR(20), FR(10), FR(20), FR(10), FR(20)] # like percents
+            widgets:
+              - label:
+                  text: "Temperatura media"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+              - label:
+                  id: temperatura
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+
+              - label:
+                  text: "Tensione"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 1 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+              - label:
+                  id: tensione
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 1 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+
+              - label:
+                  text: "Energia"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 0 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+              - label:
+                  id: energia
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 1 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+
+              - label:
+                  text: "Energia"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 2 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+              - label:
+                  id: energiaa
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 3 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+
+              - label:
+                  text: "Energia"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 4 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+              - label:
+                  id: energiaaa
+                  text: "nd"
+                  text_font: montserrat_46
+                  grid_cell_column_pos: 2 # place the widget in
+                  grid_cell_row_pos: 5 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+                  align: center
+              - switch:
+                  id: cancello_btn
+                  align: CENTER
+                  checkable: true
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 3 # the corresponding cell
+                  grid_cell_row_span: 1
+                  width: 100    # larghezza in pixel
+                  height: 40    # altezza in pixel
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER   
+                  on_click:
+                    - homeassistant.action:
+                        action: input_boolean.toggle
+                        data:
+                          entity_id: input_boolean.caldaia_lock
+              - label:
+                  text: "Testo"
+                  text_font: montserrat_28
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 4 # the corresponding cell
+                  grid_cell_x_align: STRETCH
+                  grid_cell_y_align: STRETCH
+ 
+              - switch:
+                  id: local_light_switch
+                  align: CENTER
+                  checkable: true
+                  grid_cell_column_pos: 0 # place the widget in
+                  grid_cell_row_pos: 5 # the corresponding cell
+                  grid_cell_row_span: 1
+                  width: 80    # larghezza in pixel
+                  height: 20    # altezza in pixel
+                  grid_cell_x_align: CENTER
+                  grid_cell_y_align: CENTER         
+                  on_click:
+                    - homeassistant.action:
+                        action: input_boolean.toggle
+                        data:
+                          entity_id: input_boolean.abilitazione_promemoria_panni
+        
+                        
+
+      
+
+
+
+
+binary_sensor:
+  - platform: homeassistant
+    id: switchallarmeperimetrale
+    entity_id: automation.allarme_perimetrale
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: buttonallarmeperimetrale
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: switchallarmesentinelleinterne
+    entity_id: automation.allarme_notifica_sentinelle_interne
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: buttonallsentinelleinterne
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: switchallarmesentinelleesterne
+    entity_id: automation.allarme_videosorveglianza_notifica_perimetro_interno_occupancy     
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: buttonallsentinelleesterne
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: sensoreporta
+    entity_id: binary_sensor.porta_vetro_apertura
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: sensoreportasala
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: sensorefinestrasala1
+    entity_id: binary_sensor.finestra_sala_apertura
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: sensorefinestrasala
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: sensorefinestracamera1
+    entity_id: binary_sensor.finestra_camera_apertura
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: sensorefinestracamera
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: sensorefinestrabagno1
+    entity_id: binary_sensor.finestra_bagno_apertura
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: sensorefinestrabagno
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: sensor_page_termostato_stato_caldaia
+    entity_id: switch.shelly1_caldaia
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: page_termostato_stato_caldaia
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: sensor_page_comandi_1_deumidificatore
+    entity_id: switch.deumidificatore_interruttore
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: page_comandi_1_deumidificatore
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: sensor_page_comandi_1_lavatrice
+    entity_id: switch.presa_lavatrice_interruttore
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: page_comandi_1_lavatrice
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: sentinellainternastato1
+    entity_id: binary_sensor.esphome_sentinella_sala_presence
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: sentinellainternastato
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: sentinellasalainternaconnessione1
+    entity_id: binary_sensor.192_168_20_113
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: sentinellasalainternaconnessione
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: sentinellaesternastato1
+    entity_id: binary_sensor.esphome_sentinella_ld2450_occupancy
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: sentinellaesternastato
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: sentinellaesternaconnessione1
+    entity_id: binary_sensor.192_168_20_113
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: sentinellaesternaconnessione
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: cancello3
+    entity_id: input_boolean.abilitazione_promemoria_panni
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: local_light_switch
+          state:
+            checked: !lambda return x;
+  - platform: homeassistant
+    id: cancello
+    entity_id: input_boolean.caldaia_lock
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: cancello_btn
+          state:
+            checked: !lambda return x;
+
+
+
+
+
+sensor:
+  ##### page_energia_1 ####
+  - platform: homeassistant
+    id: sensor_page_energia_1_potenza
+    entity_id: sensor.shellyem_c45bbee2118b_channel_1_power
+    on_value:
+      then:
+        lvgl.label.update:
+          id: page_energia_1_potenza
+          text:
+            format: "%.0f W"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: sensor_page_energia_1_tensione
+    entity_id: sensor.shellyem_c45bbee2118b_channel_1_voltage
+    on_value:
+      then:
+        lvgl.label.update:
+          id: page_energia_1_tensione
+          text:
+            format: "%.0f V"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: sensor_page_energia_1_upssentinel_battery
+    entity_id: sensor.sentinelpro_carica_batterie
+    on_value:
+      then:
+        lvgl.label.update:
+          id: page_energia_1_upssentinel_battery
+          text:
+            format: "%.0f %"
+            args: [ 'x' ]
+  ##### page_termostato ####
+  - platform: homeassistant
+    id: sensor_page_termostato_valore_attuale
+    entity_id: climate.termostato_caldaia
+    attribute: temperature
+    on_value:
+      then:
+        lvgl.label.update:
+          id: page_termostato_valore_attuale
+          text:
+            format: "Temperatura impostata %.1f °C"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: sensor_page_termostato_temperatura_casa
+    entity_id: climate.termostato_caldaia
+    attribute: current_temperature
+    on_value:
+      then:
+        lvgl.label.update:
+          id: page_termostato_temperatura_casa
+          text:
+            format: "Temperatura attuale %.1f °C"
+            args: [ 'x' ]
+
+
+
+
+
+  ##### PAGINA TEST ####
+  - platform: homeassistant
+    id: temperatura_media_interno_casa
+    entity_id: sensor.temperatura_media_interno_casa
+    on_value:
+      then:
+        lvgl.label.update:
+          id: temperatura
+          text:
+            format: "%.0f °C"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: shellyem_c45bbee2118b_channel_1_power
+    entity_id: sensor.shellyem_c45bbee2118b_channel_1_power
+    on_value:
+      then:
+        lvgl.label.update:
+          id: energia
+          text:
+            format: "%.0f W"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: shellyem_c45bbee2118b_channel_1_voltage
+    entity_id: sensor.shellyem_c45bbee2118b_channel_1_voltage
+    on_value:
+      then:
+        lvgl.label.update:
+          id: tensione
+          text:
+            format: "%.0f °C"
+            args: [ 'x' ]
+
+
+number:
+  - platform: template       # Backlight timer
+    name: LVGL Screen timeout
+    optimistic: true
+    id: display_timeout
+    unit_of_measurement: "s"
+    initial_value: 45
+    restore_value: true
+    min_value: 5
+    max_value: 180
+    step: 5
+    mode: box
+
+
+light:        
+  - platform: monochromatic   # Backlight 
+    id: display_backlight
+    output: backlight_pin
+    name: "Backlight Level"
+    restore_mode: RESTORE_DEFAULT_ON
+
+
+image:
+  - file: mdi:transmission-tower
+    id: transmissiontower
+    type: binary
+    resize: 70x70
+  - file: mdi:shield-account
+    id: shieldaccount  
+    type: binary
+    resize: 70x70
+  - file: mdi:thermometer-lines
+    id: thermometerlines  
+    type: binary
+    resize: 70x70
+  - file: mdi:toggle-switch-outline
+    id: toggleswitchoutline  
+    type: binary
+    resize: 70x70
+  - file: mdi:lan
+    id: lan  
+    type: binary
+    resize: 70x70
+  - file: mdi:information
+    id: information  
+    type: binary
+    resize: 70x70
+```
