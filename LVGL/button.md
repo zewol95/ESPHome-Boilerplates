@@ -48,15 +48,15 @@ image:
 
 ```
 
-In addition, if you whant that the botton will follow hte stats of home assistant you need to add the lambda role.
+In addition, if you want that the botton will follow the stats of home assistant entity you need to add the lambda role.
 (For example:
 if you have a button that start / stop an automation and you click start in home assistant WebUi, the button on the LVGL display will follow the status.)
-
+Add:
 ```
 binary_sensor:
   - platform: homeassistant
     id: status_button_id
-    entity_id: automation.allarme_perimetrale
+    entity_id: automation.xxxxxx
     publish_initial_state: true
     on_state:
       then:
@@ -66,8 +66,8 @@ binary_sensor:
             checked: !lambda return x;
 ```
 
-Another userfull case is a button not cliccable that follow some binary sensor; as a "led".
-You need to remove 'on_press' and add 'clickable: false.
+Another userfull case is a button not cliccable that follow some binary sensor in home assistant; as a "led".
+You need to remove the 'on_press' section and add 'clickable: false'.
 
 ```
 widgets:
