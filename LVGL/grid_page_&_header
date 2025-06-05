@@ -28,3 +28,12 @@ For a page, define a X Y grid with an header.
             widgets:
               ...
 ```
+
+In the children widgets define the position, started with pos 0 and row 0.
+
+```
+grid_cell_column_pos: 0          # place the widget in the column pos
+grid_cell_row_pos: 0             # place the widget in the column row
+grid_cell_column_span: 1         # expand the widget in columns, default to 1   
+grid_cell_row_span: 1            # expand the widget in row, default to 1
+```
