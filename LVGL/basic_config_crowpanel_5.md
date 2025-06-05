@@ -1,5 +1,6 @@
 # BASIC CONFIG FOR CROWPANEL 5' #
 
+```
 
 esphome:
   name: elecrow5-panel
@@ -115,3 +116,5 @@ output:
   - platform: ledc   # Backlight
     pin: 2
     id: backlight_pin
+
+```
