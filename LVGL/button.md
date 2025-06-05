@@ -1,4 +1,4 @@
-# A BUTTON CLICCABLE #
+# BUTTON #
 
 Create a button with an immage and a text in lvgl grid layout.
 If you press the button the system will call a script or a home assistant automation, depends what you want to do.
