@@ -1,3 +1,6 @@
+# BASIC CONFIG FOR CROWPANEL 5' #
+
+
 esphome:
   name: elecrow5-panel
   friendly_name: elecrow5_panel
