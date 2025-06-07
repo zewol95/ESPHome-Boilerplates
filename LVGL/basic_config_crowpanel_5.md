@@ -10,6 +10,7 @@ esphome:
     then:
       - delay: 2s
       - component.update: touch0
+      - light.turn_on: display_backlight
 
   platformio_options:
     board_build.esp-idf.memory_type: qio_opi
