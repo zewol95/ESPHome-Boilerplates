@@ -1,4 +1,3 @@
-```
 esphome:
   name: elecrow5-panel
   friendly_name: elecrow5_panel
@@ -7,6 +6,7 @@ esphome:
     then:
       - delay: 2s
       - component.update: touch0
+      - light.turn_on: display_backlight
 
   platformio_options:
     board_build.esp-idf.memory_type: qio_opi
@@ -33,12 +33,14 @@ api:
           lambda: 'return (0 == client_info.find("Home Assistant "));'
         then:
           - lvgl.widget.show: lbl_hastatus
+          - lvgl.widget.show: lbl_securitystatus
   on_client_disconnected:
     - if:
         condition:
           lambda: 'return (0 == client_info.find("Home Assistant "));'
         then:
           - lvgl.widget.hide: lbl_hastatus
+          - lvgl.widget.hide: lbl_securitystatus
 
 ota:
   - platform: esphome
@@ -98,16 +100,16 @@ touchscreen:
   id: touch0
   display: main_display
   update_interval: 20ms
-  on_release:
+  on_release:       # Quando il dito rilascia il touchscreen
     then:
       - if:                 
-          condition: lvgl.is_paused
+          condition: lvgl.is_paused     # Se il display è in pausa
           then:
-            - lvgl.resume:
-            - lvgl.widget.redraw:
-            - switch.turn_off: switch_antiburn
-            - lvgl.page.show: page_home_1
-            - light.turn_on: display_backlight
+            - lvgl.page.show: page_home_1        # Mostro la home page
+            - lvgl.resume:                       # Resumo il display
+            - lvgl.widget.redraw:                # Riattivo i widget (resumo il display)
+            - switch.turn_off: switch_antiburn   # Spengo a prescindere l'antibunner (anche se non è attivo lo disattivo uguale)
+            - light.turn_on: display_backlight   # Riattivo la luminosità
             
 output:
   - platform: ledc   # Backlight
@@ -159,8 +161,8 @@ interval:
             - delay: 250ms
             - output.turn_off: buzzer_output
 
-key_collector:    # Configuro il keypad della sicurezza
-  - source_id: lvgl_keypad
+key_collector:    
+  - source_id: lvgl_keypad          # Configuro il keypad della sicurezza
     min_length: 0
     max_length: 4
     end_keys: "#"
@@ -295,9 +297,18 @@ lvgl:
           x: -2
           y: 3
           text_align: right
+          text_color: 0x00FF00
+          text_font: montserrat_24
+      - label:
+          text: "\uF015"
+          id: lbl_securitystatus
+          hidden: true
+          align: top_right
+          x: -42
+          y: 3
+          text_align: right
           text_color: 0xFFFFFF
-          text_font: montserrat_24 
-
+          text_font: montserrat_24
 
 
 
@@ -753,12 +764,22 @@ lvgl:
                         layout: # enable the GRID layout for the children widgets
                           type: GRID # split the rows and the columns proportionally
                           grid_columns: [FR(2), FR(2)] # equal
-                          grid_rows: [FR(50), FR(50)] # like percents
+                          grid_rows: [FR(20), FR(40), FR(40)] # like percents
                         widgets:  
+                          - label:
+                              grid_cell_column_pos: 0
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 2
+                              text: "SENSORI MAGNETICI"
+                              width: 100%       # Questo widget essendo in un row_span deve occupare tutto lo spazio per poter essere gesstito con le restanti proprietà
+                              text_font: montserrat_18
+                              align: CENTER
+                              text_align: CENTER
+                              text_color: 0x000000
                           - button:
                               id: sensoreportasala
                               grid_cell_column_pos: 0
-                              grid_cell_row_pos: 0
+                              grid_cell_row_pos: 1
                               grid_cell_row_span: 1
                               grid_cell_x_align: STRETCH
                               grid_cell_y_align: STRETCH
@@ -775,7 +796,7 @@ lvgl:
                           - button:
                               id: sensorefinestrasala
                               grid_cell_column_pos: 0
-                              grid_cell_row_pos: 1
+                              grid_cell_row_pos: 2
                               grid_cell_row_span: 1
                               grid_cell_x_align: STRETCH
                               grid_cell_y_align: STRETCH
@@ -792,7 +813,7 @@ lvgl:
                           - button:
                               id: sensorefinestracamera
                               grid_cell_column_pos: 1
-                              grid_cell_row_pos: 0
+                              grid_cell_row_pos: 1
                               grid_cell_row_span: 1
                               grid_cell_x_align: STRETCH
                               grid_cell_y_align: STRETCH
@@ -809,7 +830,7 @@ lvgl:
                           - button:
                               id: sensorefinestrabagno
                               grid_cell_column_pos: 1
-                              grid_cell_row_pos: 1
+                              grid_cell_row_pos: 2
                               grid_cell_row_span: 1
                               grid_cell_x_align: STRETCH
                               grid_cell_y_align: STRETCH
@@ -844,12 +865,22 @@ lvgl:
                         layout: # enable the GRID layout for the children widgets
                           type: GRID # split the rows and the columns proportionally
                           grid_columns: [FR(2), FR(2)] # equal
-                          grid_rows: [FR(50), FR(50)] # like percents
+                          grid_rows: [FR(20), FR(40), FR(40)] # like percents
                         widgets:  
+                          - label:
+                              grid_cell_column_pos: 0
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 2
+                              width: 100%       # Questo widget essendo in un row_span deve occupare tutto lo spazio per poter essere gesstito con le restanti proprietà
+                              text: "SENTINELLA INTERNA"
+                              text_font: montserrat_18
+                              align: CENTER
+                              text_align: CENTER
+                              text_color: 0x000000
                           - button:
                               id: sentinellainternastato
                               grid_cell_column_pos: 0
-                              grid_cell_row_pos: 0
+                              grid_cell_row_pos: 1
                               grid_cell_row_span: 1
                               grid_cell_x_align: STRETCH
                               grid_cell_y_align: STRETCH
@@ -866,7 +897,7 @@ lvgl:
                           - button:
                               id: sentinellasalainternaconnessione
                               grid_cell_column_pos: 1
-                              grid_cell_row_pos: 0
+                              grid_cell_row_pos: 1
                               grid_cell_row_span: 1
                               grid_cell_x_align: STRETCH
                               grid_cell_y_align: STRETCH
@@ -902,12 +933,23 @@ lvgl:
                         layout: # enable the GRID layout for the children widgets
                           type: GRID # split the rows and the columns proportionally
                           grid_columns: [FR(2), FR(2)] # equal
-                          grid_rows: [FR(50), FR(50)] # like percents
+                          grid_rows: [FR(20), FR(40), FR(40)] # like percents
                         widgets:  
+                          - label:
+                              grid_cell_column_pos: 0
+                              grid_cell_row_pos: 0
+                              grid_cell_row_span: 2
+                              text: "SENTINELLA ESTERNA"
+                              width: 100%       # Questo widget essendo in un row_span deve occupare tutto lo spazio per poter essere gesstito con le restanti proprietà
+                              text_font: montserrat_18
+                              align: CENTER
+                              text_align: CENTER
+                              text_color: 0x000000
+
                           - button:
                               id: sentinellaesternastato
                               grid_cell_column_pos: 0
-                              grid_cell_row_pos: 0
+                              grid_cell_row_pos: 1
                               grid_cell_row_span: 1
                               grid_cell_x_align: STRETCH
                               grid_cell_y_align: STRETCH
@@ -924,7 +966,7 @@ lvgl:
                           - button:
                               id: sentinellaesternaconnessione
                               grid_cell_column_pos: 1
-                              grid_cell_row_pos: 0
+                              grid_cell_row_pos: 1
                               grid_cell_row_span: 1
                               grid_cell_x_align: STRETCH
                               grid_cell_y_align: STRETCH
@@ -1271,10 +1313,30 @@ binary_sensor:
     publish_initial_state: true
     on_state:
       then:
-        lvgl.widget.update:
-          id: buttonallarmeperimetrale
-          state:
-            checked: !lambda return x;
+        - lvgl.widget.update:
+            id: buttonallarmeperimetrale
+            state:
+              checked: !lambda 'return x;'
+
+        - if:
+            condition:
+              binary_sensor.is_on: switchallarmeperimetrale
+            then:
+              - lvgl.widget.update:
+                  id: lbl_securitystatus
+                  text_color: 0x00FF00  # Verde
+        - if:
+            condition:
+              binary_sensor.is_off: switchallarmeperimetrale
+            then:
+              - lvgl.widget.update:
+                  id: lbl_securitystatus
+                  text_color: 0xFF0000  # Rosso
+
+
+
+
+
   - platform: homeassistant
     id: switchallarmesentinelleinterne
     entity_id: automation.allarme_notifica_sentinelle_interne
@@ -1576,4 +1638,3 @@ image:
     id: information  
     type: binary
     resize: 70x70
-```
