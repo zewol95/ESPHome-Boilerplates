@@ -1,9 +1,9 @@
-Create a text lable that display an entity value.
+Create a text label that display an entity value.
 
 ```
  widgets:
   - label:
-      id: lable_id
+      id: sensor_label_id
       text: "nd"                      # Default text, it will displayed until the display will connected to home assistant
       text_font: montserrat_46
       grid_cell_column_pos: 0          # place the widget in the column pos
@@ -19,7 +19,7 @@ Create a text lable that display an entity value.
 
 sensor:
   - platform: homeassistant
-    id: sensor_lable_id
+    id: sensor_label_id
     entity_id: climate.termostato_caldaia     # Define the entity
     attribute: temperature                    # OPTIONAL!!! Define the attribute
     on_value:
@@ -30,4 +30,14 @@ sensor:
             format: "Temperatur Set %.1f °C"   # Define text before and after the value of entity
             args: [ 'x' ]
 
+```
+
+
+For update the label, use thi metod:
+
+```
+   - lvgl.label.update:
+       id: sensor_label_id          
+       text: "NEW_TEXT"
+       text_color: 0x00FF00
 ```
