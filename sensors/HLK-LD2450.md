@@ -259,9 +259,9 @@ entities:
       shape: spline
       width: 5
     x:
-      - $ex hass.states["sensor.esphome_sentinella_esterna_target_1_x"].state
+      - $ex hass.states["sensor.esphome_yourdevicename_target_1_x"].state
     "y":
-      - $ex hass.states["sensor.esphome_sentinella_esterna_target_1_y"].state
+      - $ex hass.states["sensor.esphome_yourdevicename_target_1_y"].state
   - entity: ""
     name: Target2
     marker:
@@ -270,9 +270,9 @@ entities:
       shape: spline
       width: 5
     x:
-      - $ex hass.states["sensor.esphome_sentinella_esterna_target_2_x"].state
+      - $ex hass.states["sensor.esphome_yourdevicename_target_2_x"].state
     "y":
-      - $ex hass.states["sensor.esphome_sentinella_esterna_target_2_y"].state
+      - $ex hass.states["sensor.esphome_yourdevicename_target_2_y"].state
   - entity: ""
     name: Target3
     marker:
@@ -281,9 +281,9 @@ entities:
       shape: spline
       width: 5
     x:
-      - $ex hass.states["sensor.esphome_sentinella_esterna_target_3_x"].state
+      - $ex hass.states["sensor.esphome_yourdevicename_target_3_x"].state
     "y":
-      - $ex hass.states["sensor.esphome_sentinella_esterna_target_3_y"].state
+      - $ex hass.states["sensor.esphome_yourdevicename_target_3_y"].state
   - entity: ""
     name: zone_1
     mode: lines
@@ -294,17 +294,17 @@ entities:
       shape: line
       width: 2
     x:
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_x1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_x1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_x2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_x2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_x2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_x2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_x1"].state
     "y":
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_y1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_y2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_y2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_y1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_1_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_y2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_y2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_1_y1"].state
   - entity: ""
     name: zone_2
     mode: lines
@@ -315,17 +315,17 @@ entities:
       shape: line
       width: 2
     x:
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_x1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_x1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_x2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_x2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_x2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_x2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_x1"].state
     "y":
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_y1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_y2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_y2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_y1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_2_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_y2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_y2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_2_y1"].state
   - entity: ""
     name: zone_3
     mode: lines
@@ -336,17 +336,17 @@ entities:
       shape: line
       width: 2
     x:
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_x1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_x1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_x2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_x2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_x1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_x2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_x2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_x1"].state
     "y":
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_y1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_y2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_y2"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_y1"].state
-      - $ex hass.states["number.esphome_sentinella_esterna_zone_3_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_y2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_y2"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_y1"].state
+      - $ex hass.states["number.esphome_yourdevicename_zone_3_y1"].state
   - entity: ""
     name: Coverage
     mode: lines
@@ -389,6 +389,7 @@ entities:
       - $ex 7500 * Math.cos((2 * Math.PI)/360 * 60)
       - 0
 raw_plotly_config: true
+
 
 
 ```
