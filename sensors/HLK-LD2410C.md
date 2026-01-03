@@ -201,7 +201,3 @@ select:
       name: out pin level
 
 ```
-
-## Conclusione
-Il **HLK-LD2410C** è un sensore radar efficace e facile da integrare con **ESP32**, utile per applicazioni come **rilevamento presenza, sicurezza e automazione domestica**.
-
